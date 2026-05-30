@@ -1,4 +1,4 @@
-Hub Chantier v4.3.1 — Portail client + acceptation automatique EmailJS
+Hub Chantier v4.3.3 — Portail client + acceptation automatique EmailJS
 
 Fichiers à publier à la racine GitHub Pages :
 - index.html
@@ -7,7 +7,7 @@ Fichiers à publier à la racine GitHub Pages :
 - sw.js
 - icons/
 
-Nouveau en v4.3.1 :
+Nouveau en v4.3.3 :
 - EmailJS configurable dans Mes tarifs
 - Le portail client envoie l’acceptation automatiquement si EmailJS est configuré
 - Fallback mailto si EmailJS est absent ou échoue
@@ -25,3 +25,6 @@ Configuration EmailJS :
 
 Test :
 https://TON_USER.github.io/TON_REPO/?v=42
+
+
+Nouveau en v4.3.3 : correctif du bouton Modifier/Supprimer des items, même pour les anciens items sauvegardés sans identifiant interne.
