@@ -15,7 +15,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
 
-<title>Hub Finition – Laval 2026 v11.4 Matériaux+</title>
+<title>Hub Finition – Laval 2026 v11.6 Tarifs robustes</title>
 <style>
 :root{
   --bg:#f6f8fb;
@@ -461,7 +461,7 @@ body.sb-on{padding-bottom:106px}
     <section class="hl-hero">
       <div class="hl-topline">
         <div class="hl-mark">🏠</div>
-        <div class="hl-version">v11.4 matériaux+</div>
+        <div class="hl-version">v11.5 caulking+</div>
       </div>
       <div class="hl-title">Hub Finition</div>
       <div class="hl-sub">Créer une soumission propre, rapide et prête à envoyer — directement sur iPhone.</div>
@@ -539,7 +539,7 @@ body.sb-on{padding-bottom:106px}
           <div class="ios-dash-title">Choisis le type de travaux</div>
           <div class="ios-dash-sub">Tous les calculateurs et options sont conservés. Les cartes ouvrent les mêmes modules qu’avant.</div>
         </div>
-        <div class="ios-dash-pill">v11.4</div>
+        <div class="ios-dash-pill">v11.5</div>
       </div>
       <div class="ios-quick-actions">
         <button type="button" onclick="window.CALCS&&window.openSheet&&window.openSheet(window.CALCS.soumission.title,window.CALCS.soumission.tpl,window.CALCS.soumission.init)">📋 Soumission</button>
@@ -563,7 +563,7 @@ body.sb-on{padding-bottom:106px}
       <button class="bubble" data-open="mobilisation"><div class="emoji">🚐</div><span class="bubble-title">Mobilisation</span><span class="bubble-sub">Déplacement, setup, minimum chantier</span><span class="bubble-meta">forfait</span></button>
       <button class="bubble" data-open="soumission"><div class="emoji">📋</div><span class="bubble-title">Soumission</span><span class="bubble-sub">Révision, copie, PDF, taxes</span><span class="bubble-meta">total final</span></button>
     </div>
-    <p class="hint">Version 10.8 • moulures/cadrages par dimensions • 100% local • Fonctionne hors-ligne sur iPhone</p>
+    <p class="hint">Version 11.5 • calfeutrage caissons corrigé • 100% local • Fonctionne hors-ligne sur iPhone</p>
 
     <div id="live-recap" class="hidden">
       <div id="recap-header">
@@ -1016,11 +1016,13 @@ body.sb-on{padding-bottom:106px}
     </div>
     <div class="mat-calc-detail" id="ca_mat_qty_detail">Entre la quantité, le prix par baguette et le markup.</div>
   </div>
-  <div class="field"><label><input type="checkbox" id="ca_calf"> Calfeutrage</label></div>
+  <div class="field"><label><input type="checkbox" id="ca_calf"> Calfeutrage / finition</label>
+    <div class="field-help">En mode par caisson, ce poste est chargé par caisson pour couvrir le temps, le tube, les coins et le nettoyage. Défaut : 20 $ simple / 30 $ complexe.</div>
+  </div>
   <div class="suggestion" id="ca_suggestion"></div>
   <div class="result">
     <div>MO: <strong id="ca_mo">$0.00</strong></div>
-    <div id="ca_calf_line" class="hidden">Calfeutrage: <strong id="ca_calf_total">$0.00</strong></div>
+    <div id="ca_calf_line" class="hidden">Calfeutrage / finition: <strong id="ca_calf_total">$0.00</strong></div>
     <div id="ca_mat_line" class="hidden">Matériaux: <strong id="ca_mat_total">$0.00</strong></div>
     <div class="total">Total: <strong id="ca_total">$0.00</strong></div>
   </div>
@@ -1082,8 +1084,11 @@ const $ = s => document.querySelector(s);
 const money = n => new Intl.NumberFormat('fr-CA',{style:'currency',currency:'CAD'}).format(n||0);
 let _tarifs=null,_projet=null,_items=[],_meta={};
 const store={
-  getTarifs(){ return _tarifs?{..._tarifs}:{...DEFAULT} },
-  setTarifs(t){ _tarifs={...t} },
+  // Toujours fusionner les tarifs sauvegardés/importés avec DEFAULT.
+  // Ça évite qu'un ancien fichier de sauvegarde ou une ancienne version laisse des champs undefined,
+  // ce qui donnait 0 $ dans certains modules comme Moulures / cimaises.
+  getTarifs(){ return {...DEFAULT, ...(_tarifs||{})} },
+  setTarifs(t){ _tarifs={...DEFAULT, ...(t||{})} },
   getProjet(){ return _projet },
   setProjet(p){ _projet=p },
   getItems(){ return [..._items] },
@@ -1152,6 +1157,8 @@ const DEFAULT = {
   caisson_complexe: 225,
   caisson_pi_simple: 6,
   caisson_pi_complexe: 8,
+  caisson_calfeutrage_simple: 20,
+  caisson_calfeutrage_complexe: 30,
 
   // Membrane plancher
   plancher_membrane: 0.65,
@@ -1696,8 +1703,11 @@ const CALCS={
     const g=getGamme(root); const gm=gammeMulti(t,g); const diff=getDiff(diffEl,diffBadge);
     const m=currentMeasure();
     const s=m.pi;
-    const baseRate=(m.comp==='simple'?t.moulure_simple:t.moulure_moy)*gm;
-    const calfMo=calf.checked?s*(t.calfeutrage||0.35):0;
+    const simpleRate=(Number.isFinite(+t.moulure_simple)&&+t.moulure_simple>0)?+t.moulure_simple:DEFAULT.moulure_simple;
+    const moyRate=(Number.isFinite(+t.moulure_moy)&&+t.moulure_moy>0)?+t.moulure_moy:DEFAULT.moulure_moy;
+    const calfRate=(Number.isFinite(+t.calfeutrage)&&+t.calfeutrage>0)?+t.calfeutrage:DEFAULT.calfeutrage;
+    const baseRate=(m.comp==='simple'?simpleRate:moyRate)*gm;
+    const calfMo=calf.checked?s*calfRate:0;
     if(boxDetail) boxDetail.innerHTML='<strong>Pieds linéaires calculés :</strong> '+(Math.round(s*10)/10)+' pi lin. pour '+m.detail+'.';
     if(sug) sug.textContent=`Gamme ${g} (×${gm.toFixed(2)}) → ${baseRate.toFixed(2)} $/pi • ${Math.round(s*10)/10} pi lin.`;
     const mo=s*baseRate*(1+diff);
@@ -1733,7 +1743,11 @@ const CALCS={
       desc:`Moulures / cimaises ${m.comp} – ${Math.round(s*10)/10}pi${ma.checked&&(matMode==='qty'||matMode==='pieces')&&matDetail?` | mat. ${matDetail}`:''}${calf.checked?' + calf.':''}${diff?` | diff.${+diffEl.value}%`:''} [${g}]`};
   };
   setupGamme(root,calc);
-  [pi,co,coBox,ma,mp,mg,mgPieces,pieceLen,wasteEl,piecePrice,qtyCount,qtyLen,qtyPrice,mgQty,boxQty,boxW,boxH,diffEl,calf].forEach(e=>e&&e.addEventListener('input',calc));
+  [pi,co,coBox,ma,mp,mg,mgPieces,pieceLen,wasteEl,piecePrice,qtyCount,qtyLen,qtyPrice,mgQty,boxQty,boxW,boxH,diffEl,calf].forEach(e=>{
+    if(!e)return;
+    e.addEventListener('input',calc);
+    e.addEventListener('change',calc);
+  });
   if(piecePrice)piecePrice.addEventListener('input',()=>{piecePrice.dataset.auto='0';});
   if(qtyPrice)qtyPrice.addEventListener('input',()=>{qtyPrice.dataset.auto='0';});
   if(qtyCount)qtyCount.addEventListener('input',()=>{qtyCount.dataset.auto='0';});
@@ -2630,23 +2644,32 @@ const CALCS={
   function calc(){
     const g=getGamme(root); const gm=gammeMulti(t,g); const diff=getDiff(diffEl,diffBadge);
     const isCaisson=mode.value==='caisson';
-    let mo=0, desc='', piLin=0;
+    let mo=0, desc='', piLin=0, moCalfeutrage=0, calfDesc='';
     if(isCaisson){
       const n=+qte.value||0;
       const rate=(comp.value==='complexe'?(t.caisson_complexe||225):(t.caisson_simple||150))*gm;
+      const calfRate=comp.value==='complexe'?(t.caisson_calfeutrage_complexe??30):(t.caisson_calfeutrage_simple??20);
       mo=n*rate*(1+diff);
-      piLin=n*(comp.value==='complexe'?14:10);
+      piLin=n*(comp.value==='complexe'?14:10); // info seulement, pas utilisé pour le prix en mode par caisson
+      if(calfEl&&calfEl.checked){
+        moCalfeutrage=n*calfRate;
+        calfDesc=' | calfeutrage '+money(calfRate)+'/caisson';
+      }
       desc=n+' caisson(s) '+comp.value+' @ '+money(rate)+'/u';
-      if(sug) sug.textContent='Gamme '+g+' (×'+gm.toFixed(2)+') → '+money(rate)+'/caisson'+(mat.checked?' | matériaux manuels':'')+(calfEl&&calfEl.checked?' | calf ~'+piLin+'pi':'');
+      if(sug) sug.textContent='Gamme '+g+' (×'+gm.toFixed(2)+') → '+money(rate)+'/caisson'+(mat.checked?' | matériaux manuels':'')+calfDesc;
     }else{
       const pi=+piEl.value||0;
       const rate=(compPi.value==='complexe'?(t.caisson_pi_complexe||8):(t.caisson_pi_simple||6))*gm;
+      const calfRate=t.calfeutrage||0.35;
       mo=pi*rate*(1+diff);
       piLin=pi;
+      if(calfEl&&calfEl.checked){
+        moCalfeutrage=piLin*calfRate;
+        calfDesc=' | calfeutrage '+piLin+'pi @ '+money(calfRate)+'/pi';
+      }
       desc=pi+'pi - caissons '+compPi.value+' @ '+money(rate)+'/pi';
-      if(sug) sug.textContent='Gamme '+g+' (×'+gm.toFixed(2)+') → '+money(rate)+'/pi'+(mat.checked?' | matériaux manuels':'')+(calfEl&&calfEl.checked?' | calf ~'+pi+'pi':'');
+      if(sug) sug.textContent='Gamme '+g+' (×'+gm.toFixed(2)+') → '+money(rate)+'/pi'+(mat.checked?' | matériaux manuels':'')+calfDesc;
     }
-    const moCalfeutrage=calfEl&&calfEl.checked?piLin*(t.calfeutrage||0.35):0;
     if(calfLine) calfLine.classList.toggle('hidden',!(calfEl&&calfEl.checked));
     if(calfTot) calfTot.textContent=money(moCalfeutrage);
     let matC=0,mrg=0,matDetail='';
@@ -2663,7 +2686,7 @@ const CALCS={
     matLine.classList.toggle('hidden',!mat.checked);
     const tot=mo+moCalfeutrage+matC;
     totEl.textContent=money(tot);
-    return {mo:mo+moCalfeutrage,matCout:mat.checked?(matC-mrg):0,marge:mrg,total:tot,desc:desc+(mat.checked&&matDetail?' | mat. '+matDetail:'')+(calfEl&&calfEl.checked?' + calf.':'')+(diff?' | diff.'+diffEl.value+'%':'')+' ['+g+']'};
+    return {mo:mo+moCalfeutrage,matCout:mat.checked?(matC-mrg):0,marge:mrg,total:tot,desc:desc+(mat.checked&&matDetail?' | mat. '+matDetail:'')+(calfEl&&calfEl.checked?' | calfeutrage/finition '+money(moCalfeutrage):'')+(diff?' | diff.'+diffEl.value+'%':'')+' ['+g+']'};
   }
   mode.addEventListener('change',()=>{caissonWrap.classList.toggle('hidden',mode.value!=='caisson');pilinWrap.classList.toggle('hidden',mode.value==='caisson');calc();});
   mat.addEventListener('change',()=>{matWrap.classList.toggle('hidden',!mat.checked);calc();});
@@ -2701,7 +2724,7 @@ const CALCS={
       const its=store.getItems(); its.push({cat:'Minimum chantier',desc:'Ajustement au minimum de chantier',mo:diff,matCout:0,marge:0,total:diff,note:'Minimum de chantier appliqué.'}); store.setItems(its); render(); updateRecap(); toast('Minimum ajouté');
     }
     function exportBackup(){
-      const payload={version:'11.4',exportedAt:new Date().toISOString(),projet:store.getProjet(),meta:store.getMeta?store.getMeta():{},items:store.getItems(),tarifs:store.getTarifs()};
+      const payload={version:'11.6',exportedAt:new Date().toISOString(),projet:store.getProjet(),meta:store.getMeta?store.getMeta():{},items:store.getItems(),tarifs:store.getTarifs()};
       const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
       const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='hub-finition-sauvegarde-'+new Date().toISOString().slice(0,10)+'.json'; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500); toast('Sauvegarde exportée');
     }
@@ -2820,6 +2843,8 @@ const CALCS={
       caisson_complexe:'$/u',
       caisson_pi_simple:'$/pi',
       caisson_pi_complexe:'$/pi',
+      caisson_calfeutrage_simple:'$/u',
+      caisson_calfeutrage_complexe:'$/u',
       marge:'%',
       minimum_chantier:'$'
     };
@@ -2840,7 +2865,8 @@ const CALCS={
     peint_porte_fr_simple:'Française simple',peint_porte_fr_double:'Française double',
     esc_marche:'Marche MO',esc_cm:'Contremarche MO',esc_mat:'Matériel /marche',
     taux_horaire:'Taux horaire',calfeutrage:'Calfeutrage',mobilisation:'Mobilisation',
-    caisson_simple:'Simple',caisson_complexe:'Complexe',caisson_pi_simple:'Simple',caisson_pi_complexe:'Complexe',
+    caisson_simple:'MO simple',caisson_complexe:'MO complexe',caisson_pi_simple:'MO simple / pi',caisson_pi_complexe:'MO complexe / pi',
+    caisson_calfeutrage_simple:'Calfeutrage simple',caisson_calfeutrage_complexe:'Calfeutrage complexe',
     marge:'Markup matériaux',
   };
   const groups=[
@@ -2855,7 +2881,7 @@ const CALCS={
     {id:'peint',t:'🎨 Peinture',keys:['peint_mur','peint_plaf','peint_plin','peint_gal','peint_rend','peint_conso','peint_porte_lisse','peint_porte_caisson','peint_porte_double','peint_porte_fr_simple','peint_porte_fr_double']},
     {id:'esc',t:'🪜 Escaliers',keys:['esc_marche','esc_cm','esc_mat']},
     {id:'misc',t:'⚙️ Divers',keys:['taux_horaire','calfeutrage','mobilisation','marge']},
-    {id:'caisson',t:'🟦 Caissons muraux',keys:['caisson_simple','caisson_complexe','caisson_pi_simple','caisson_pi_complexe']},
+    {id:'caisson',t:'🟦 Caissons muraux',keys:['caisson_simple','caisson_complexe','caisson_pi_simple','caisson_pi_complexe','caisson_calfeutrage_simple','caisson_calfeutrage_complexe']},
   ];
 
   // Collapsed state per group
