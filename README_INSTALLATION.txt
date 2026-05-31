@@ -1,30 +1,18 @@
-Hub Chantier v4.3.3 — Portail client + acceptation automatique EmailJS
+Hub Chantier v4.4.1 — Package PWA complet
 
-Fichiers à publier à la racine GitHub Pages :
+Fichiers à mettre à la racine de GitHub Pages :
 - index.html
 - portail.html
 - manifest.webmanifest
 - sw.js
-- icons/
+- README_INSTALLATION.txt
+- dossier icons/
 
-Nouveau en v4.3.3 :
-- EmailJS configurable dans Mes tarifs
-- Le portail client envoie l’acceptation automatiquement si EmailJS est configuré
-- Fallback mailto si EmailJS est absent ou échoue
+Installation GitHub Pages :
+1. Décompresser ce ZIP.
+2. Ouvrir le dossier décompressé.
+3. Uploader le CONTENU du dossier à la racine du repo GitHub, pas le dossier lui-même.
+4. Faire Commit changes.
+5. Ouvrir le site avec ?v=441 pour éviter le cache.
 
-Configuration EmailJS :
-1. Créer un compte EmailJS
-2. Créer un Email Service
-3. Créer un Email Template avec les variables souhaitées, par exemple :
-   {{to_email}}, {{quote_no}}, {{quote_title}}, {{client_name}}, {{accepted_by}}, {{accepted_contact}}, {{accepted_at}}, {{total}}, {{deposit}}, {{balance}}, {{acceptance_text}}, {{portal_url}}
-4. Dans Hub Chantier > Mes tarifs, remplir :
-   - Courriel acceptations
-   - EmailJS Public Key
-   - EmailJS Service ID
-   - EmailJS Template ID
-
-Test :
-https://TON_USER.github.io/TON_REPO/?v=42
-
-
-Nouveau en v4.3.3 : correctif du bouton Modifier/Supprimer des items, même pour les anciens items sauvegardés sans identifiant interne.
+Important : le portail client doit être à la racine sous le nom exact portail.html.
