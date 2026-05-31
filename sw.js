@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hub-chantier-v4-6-2';
+const CACHE_NAME = 'hub-chantier-v4-6-3';
 const ASSETS = [
   './',
   './index.html',
