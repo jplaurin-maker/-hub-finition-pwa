@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Hub Chantier v5.0</title>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Hub Chantier v5.0.2</title>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#f4f7ff">
 <style>
 :root{--bg:#f4f7ff;--card:rgba(255,255,255,.86);--ink:#071225;--muted:#667085;--blue:#1976ff;--line:#dbe3f2;--green:#0a9f4a;--red:#dc2626;--orange:#ea8a00;--purple:#7c3aed;--shadow:0 18px 45px rgba(15,23,42,.12);--r:28px}
@@ -71,57 +71,99 @@ function repairData(){migrateState();save();render();toast('Données réparées 
 function bindActions(root){
   root=root||document;
   $$('[data-tab]',root).forEach(function(b){
-    b.onclick=function(e){ e&&e.preventDefault&&e.preventDefault(); e&&e.stopPropagation&&e.stopPropagation(); state.activeTab=b.dataset.tab; save(); closeSheet(); render(); };
+    b.onclick=function(e){
+      if(e)e.stopPropagation();
+      state.activeTab=b.dataset.tab;
+      save();
+      closeSheet();
+      render();
+    };
   });
   $$('[data-action]',root).forEach(function(b){
     b.onclick=function(e){
-      e&&e.preventDefault&&e.preventDefault(); e&&e.stopPropagation&&e.stopPropagation();
+      if(e&&e.preventDefault)e.preventDefault();
+      if(e&&e.stopPropagation)e.stopPropagation();
       try{
         var a=b.dataset.action;
-        if(a==='close-sheet')return closeSheet();
-        if(a==='new-client'||a==='quick-add')return newClient();
-        if(a==='save-client')return saveClient(b.dataset.id);
-        if(a==='open-client')return openClient(b.dataset.id);
-        if(a==='edit-client')return newClient(b.dataset.id);
-        if(a==='new-quote')return newQuote(b.dataset.client);
-        if(a==='open-quote')return openQuote(b.dataset.id);
-        if(a==='add-item')return addItemSheet(b.dataset.quote);
-        if(a==='open-calc')return openCalc(b.dataset.type,b.dataset.quote);
+        if(a==='close-sheet') return closeSheet();
+        if(a==='new-client'||a==='quick-add') return newClient();
+        if(a==='save-client') return saveClient(b.dataset.id);
+        if(a==='open-client') return openClient(b.dataset.id);
+        if(a==='edit-client') return newClient(b.dataset.id);
+        if(a==='new-quote') return newQuote(b.dataset.client);
+        if(a==='open-quote') return openQuote(b.dataset.id);
+        if(a==='add-item') return addItemSheet(b.dataset.quote);
+        if(a==='open-calc') return openCalc(b.dataset.type,b.dataset.quote);
         if(a==='edit-item'){
-          var q=activeQuote();var it=(q.items||[]).find(function(x){return x.id===b.dataset.id});
-          if(!it)throw Error('Item introuvable');
-          return openCalc((it&&it.type)||guessType(it&&it.title),q.id,b.dataset.id);
+          var q1=activeQuote();
+          if(!q1) throw new Error('Aucune soumission active');
+          var it=(q1.items||[]).find(function(x){return x.id===b.dataset.id});
+          return openCalc((it&&it.type)||guessType(it&&it.title),q1.id,b.dataset.id);
         }
         if(a==='delete-item'){
-          var qd=activeQuote();qd.items=(qd.items||[]).filter(function(x){return x.id!==b.dataset.id});calcQuote(qd);save();openQuote(qd.id);return;
+          var q2=activeQuote();
+          if(!q2) throw new Error('Aucune soumission active');
+          q2.items=(q2.items||[]).filter(function(x){return x.id!==b.dataset.id});
+          calcQuote(q2);save();openQuote(q2.id);return;
         }
         if(a==='item-detail'){
-          var qi=activeQuote();var iti=(qi.items||[]).find(function(x){return x.id===b.dataset.id});
-          return openSheet('Détail item','<pre style="white-space:pre-wrap">'+esc((iti&&iti.internalDesc)||'')+'</pre>');
+          var q3=activeQuote();
+          if(!q3) throw new Error('Aucune soumission active');
+          var it2=(q3.items||[]).find(function(x){return x.id===b.dataset.id});
+          return openSheet('Détail item','<pre style="white-space:pre-wrap">'+esc((it2&&it2.internalDesc)||'')+'</pre>');
         }
-        if(a==='portal-link')return openPortal(b.dataset.id);
-        if(a==='pdf-client')return pdfClient(b.dataset.id);
-        if(a==='internal-view')return internalView(b.dataset.id);
-        if(a==='settings')return settings();
-        if(a==='save-tarifs'){$$('[data-t]').forEach(function(el){pathSet(TARIFS,el.dataset.t,el.value)});saveTarifs();closeSheet();toast('Tarifs sauvegardés');return;}
-        if(a==='tarif-section')return showTarifSection(b.dataset.sec);
-        if(a==='export-json')return exportJson();
-        if(a==='import-json')return importJson();
-        if(a==='repair-data')return repairData();
+        if(a==='portal-link') return openPortal(b.dataset.id);
+        if(a==='pdf-client') return pdfClient(b.dataset.id);
+        if(a==='internal-view') return internalView(b.dataset.id);
+        if(a==='settings') return settings();
+        if(a==='save-tarifs'){
+          $$('[data-t]').forEach(function(el){pathSet(TARIFS,el.dataset.t,el.value)});
+          saveTarifs();closeSheet();toast('Tarifs sauvegardés');return;
+        }
+        if(a==='tarif-section') return showTarifSection(b.dataset.sec);
+        if(a==='export-json') return exportJson();
+        if(a==='import-json') return importJson();
+        if(a==='repair-data') return repairData();
         if(a==='show-prospects'){state.activeTab='prospects';render();return;}
         if(a==='show-followups'||a==='show-quotes-prep'){state.activeTab='soumission';render();return;}
-        if(a==='paint-add-room'){window._paintData.rooms.push(defaultRoom());return renderPaintRooms();}
-        if(a==='paint-del-room'){window._paintData.rooms.splice(+b.dataset.ri,1);return renderPaintRooms();}
-        if(a==='paint-add-wall'){window._paintData.rooms[+b.dataset.ri].walls.push({name:'Mur '+(window._paintData.rooms[+b.dataset.ri].walls.length+1),width:10,color:'Blanc',kind:'normal',windows:[],openings:[]});return renderPaintRooms();}
-        if(a==='paint-del-wall'){window._paintData.rooms[+b.dataset.ri].walls.splice(+b.dataset.wi,1);return renderPaintRooms();}
-        if(a==='paint-add-window'){window._paintData.rooms[+b.dataset.ri].walls[+b.dataset.wi].windows.push({w:36,h:48});return renderPaintRooms();}
-        if(a==='paint-add-opening'){window._paintData.rooms[+b.dataset.ri].walls[+b.dataset.wi].openings.push({type:'normal',w:30,h:80});return renderPaintRooms();}
-        if(a==='paint-add-door'){window._paintData.rooms[+b.dataset.ri].paintDoors.push({type:'normal',faces:2,color:'Blanc'});return renderPaintRooms();}
-        if(a==='paint-del-door'){window._paintData.rooms[+b.dataset.ri].paintDoors.splice(+b.dataset.di,1);return renderPaintRooms();}
-      }catch(err){console.error(err);openSheet('Erreur action','<div class="danger">Action impossible : '+esc(err.message||err)+'</div>')}
+        if(a==='paint-add-room'){
+          window._paintData.rooms.push(defaultRoom());return renderPaintRooms();
+        }
+        if(a==='paint-del-room'){
+          window._paintData.rooms.splice(+b.dataset.ri,1);return renderPaintRooms();
+        }
+        if(a==='paint-add-wall'){
+          var r=window._paintData.rooms[+b.dataset.ri];
+          r.walls.push({name:'Mur '+(r.walls.length+1),width:10,color:'Blanc',kind:'normal',windows:[],openings:[]});
+          return renderPaintRooms();
+        }
+        if(a==='paint-del-wall'){
+          window._paintData.rooms[+b.dataset.ri].walls.splice(+b.dataset.wi,1);return renderPaintRooms();
+        }
+        if(a==='paint-add-window'){
+          window._paintData.rooms[+b.dataset.ri].walls[+b.dataset.wi].windows.push({w:36,h:48});return renderPaintRooms();
+        }
+        if(a==='paint-add-opening'){
+          window._paintData.rooms[+b.dataset.ri].walls[+b.dataset.wi].openings.push({type:'normal',w:30,h:80});return renderPaintRooms();
+        }
+        if(a==='paint-add-door'){
+          window._paintData.rooms[+b.dataset.ri].paintDoors.push({type:'normal',faces:2,color:'Blanc'});return renderPaintRooms();
+        }
+        if(a==='paint-del-door'){
+          window._paintData.rooms[+b.dataset.ri].paintDoors.splice(+b.dataset.di,1);return renderPaintRooms();
+        }
+      }catch(err){
+        console.error(err);
+        openSheet('Erreur action','<div class="danger">Action impossible : '+esc(err.message||err)+'</div>');
+      }
     };
   });
-  $$('[data-copy]',root).forEach(function(b){b.onclick=function(){navigator.clipboard&&navigator.clipboard.writeText(b.dataset.copy);toast('Copié')}});
+  $$('[data-copy]',root).forEach(function(b){
+    b.onclick=function(){
+      if(navigator.clipboard) navigator.clipboard.writeText(b.dataset.copy);
+      toast('Copié');
+    };
+  });
 }
 window.addEventListener('error',function(e){console.error(e.error||e.message);toast('Erreur interceptée : données conservées')});load();render();
 </script></body></html>
