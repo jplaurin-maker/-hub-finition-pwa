@@ -1,3 +1,4 @@
-Hub Chantier v4.5 — peinture avancée + portail compact
+Hub Chantier v4.6 — Peinture intuitive + portail plus court
 
-Dépose les fichiers à la racine GitHub Pages.
+Déposez le contenu de ce dossier à la racine du repo GitHub Pages.
+Fichiers nécessaires: index.html, portail.html, manifest.webmanifest, sw.js, icons/.
