@@ -1,4 +1,4 @@
-Hub Chantier v4.6.4 — Portail corrigé + peinture portes/fenêtres dynamiques
+Hub Chantier v4.6.5 — Portail corrigé + peinture portes/fenêtres dynamiques
 
 Hub Chantier v4.6 — Peinture intuitive + portail plus court
 
